@@ -1,0 +1,12 @@
+{
+  "socket": "{{ .CommonDir }}/web.socket",
+  "headscale_url": "http://127.0.0.1:{{ .HeadscalePort }}",
+  "headscale": "{{ .AppDir }}/bin/headscale.sh",
+  "tailscale": "{{ .AppDir }}/bin/tailscale.sh",
+  "domain": "{{ .Domain }}",
+  "app_domain": "{{ .AppDomain }}",
+  "url": "{{ .Url }}",
+  "hostname": "{{ .Hostname }}",
+  "records": "{{ .DataDir }}/extra-records.json",
+  "snap_dir": "/snap"
+}

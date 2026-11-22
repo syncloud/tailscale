@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tailscale</title>
+<style>
+body { font-family: sans-serif; max-width: 40em; margin: 2em auto; padding: 0 1em; line-height: 1.5; }
+code { background: #eee; padding: 0.1em 0.3em; border-radius: 3px; word-break: break-all; }
+</style>
+</head>
+<body>
+<h1>Tailscale</h1>
+<p>Connect your phone or laptop directly to this device, even when it is behind CGNAT.</p>
+<p>Server: <code data-testid="server-url">{{ .Url }}</code></p>
+<h2>Android</h2>
+<p>Install Tailscale, open the menu, Accounts, Use an alternate server, enter the server above and sign in with your device login.</p>
+<h2>iOS</h2>
+<p>Install Tailscale, tap Log in, then the menu, Use custom coordination server, enter the server above and sign in with your device login.</p>
+<h2>Windows, macOS, Linux</h2>
+<p><code>tailscale login --login-server {{ .Url }}</code></p>
+<p>Once connected, open your usual Syncloud addresses: they go straight to this device.</p>
+</body>
+</html>
