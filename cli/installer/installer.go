@@ -52,10 +52,13 @@ func (i *Installer) Install() error {
 }
 
 func (i *Installer) Configure() error {
-	if err := i.UpdateConfigs(); err != nil {
+	if err := i.createDirs(); err != nil {
 		return err
 	}
 	if err := i.registerOIDC(); err != nil {
+		return err
+	}
+	if err := i.UpdateConfigs(); err != nil {
 		return err
 	}
 	return i.writeVersion()
@@ -141,6 +144,9 @@ func (i *Installer) UpdateConfigs() error {
 	if err := config.Generate(path.Join(i.appDir, "config"), i.configDir, variables); err != nil {
 		return err
 	}
+	if err := i.initRecords(); err != nil {
+		return err
+	}
 
 	if err := linux.Chown(i.dataDir, UserName); err != nil {
 		return err
@@ -157,16 +163,20 @@ func (i *Installer) createDirs() error {
 	return nil
 }
 
+func (i *Installer) initRecords() error {
+	records := path.Join(i.dataDir, "extra-records.json")
+	if _, err := os.Stat(records); err == nil {
+		return nil
+	}
+	return os.WriteFile(records, []byte("[]"), 0644)
+}
+
 func (i *Installer) registerOIDC() error {
 	secret, err := i.platformClient.RegisterOIDCClient(App, []string{"/oidc/callback"}, true, "client_secret_basic")
 	if err != nil {
 		return err
 	}
-	secretFile := path.Join(i.configDir, "oidc.secret")
-	if err := os.WriteFile(secretFile, []byte(secret), 0600); err != nil {
-		return err
-	}
-	return linux.Chown(secretFile, UserName)
+	return os.WriteFile(path.Join(i.configDir, "oidc.secret"), []byte(secret), 0600)
 }
 
 func (i *Installer) writeVersion() error {
