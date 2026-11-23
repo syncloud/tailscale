@@ -135,7 +135,7 @@ func (i *Installer) UpdateConfigs() error {
 		Hostname:      strings.Split(domain, ".")[0],
 		Url:           url,
 		AuthUrl:       authUrl,
-		AuthSocket:    i.platformClient.GetAuthLocalSocket(),
+		AuthSocket:    AuthSocketPath(i.platformClient.GetAuthLocalSocket()),
 		StunHost:      StunHost(domain),
 		StunPort:      StunPort,
 		HeadscalePort: HeadscalePort,
