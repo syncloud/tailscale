@@ -27,6 +27,17 @@ test('lists this device as online and not removable', async ({ page }, info) => 
   await shoot(page, `devices-${info.project.name}`)
 })
 
+test('mobile shows devices as a list with every column on screen', async ({ page }, info) => {
+  test.skip(info.project.name !== 'mobile', 'mobile layout')
+  await signIn(page)
+
+  await expect(page.getByTestId('devices-list')).toBeVisible()
+  const status = page.getByTestId(`device-status-${device}`)
+  await status.scrollIntoViewIfNeeded()
+  await expect(status).toBeInViewport({ ratio: 1 })
+  await shoot(page, 'devices-list-mobile')
+})
+
 test('removes a client device', async ({ page }, info) => {
   test.skip(info.project.name !== 'desktop', 'one removal per run')
   await signIn(page)

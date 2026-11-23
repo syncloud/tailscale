@@ -7,6 +7,9 @@ const devices = ref<Device[]>([])
 const loading = ref(true)
 const removing = ref<Device | null>(null)
 const busy = ref(false)
+const narrowQuery = window.matchMedia('(max-width: 640px)')
+const narrow = ref(narrowQuery.matches)
+const onWidth = (e: MediaQueryListEvent) => (narrow.value = e.matches)
 let timer: number | undefined
 
 async function load() {
@@ -43,14 +46,40 @@ function lastSeen(device: Device): string {
 onMounted(() => {
   load()
   timer = window.setInterval(load, 15000)
+  narrowQuery.addEventListener('change', onWidth)
 })
-onUnmounted(() => window.clearInterval(timer))
+onUnmounted(() => {
+  window.clearInterval(timer)
+  narrowQuery.removeEventListener('change', onWidth)
+})
 </script>
 
 <template>
   <el-card data-testid="devices-card">
     <template #header>Devices</template>
-    <el-table v-loading="loading" :data="devices" row-key="id" data-testid="devices-table" empty-text="No devices yet">
+    <div v-if="narrow" v-loading="loading" class="list" data-testid="devices-list">
+      <p v-if="!loading && devices.length === 0" class="empty">No devices yet</p>
+      <div v-for="row in devices" :key="row.id" class="item">
+        <div class="item-head">
+          <span :data-testid="`device-name-${row.name}`" class="item-name">{{ row.name }}</span>
+          <el-tag v-if="row.self" size="small" class="self" :data-testid="`device-self-${row.name}`">this device</el-tag>
+        </div>
+        <div class="item-meta">{{ row.user }} · {{ row.addresses[0] }}</div>
+        <div class="item-foot">
+          <span :data-testid="`device-status-${row.name}`">
+            <el-tag v-if="row.online" type="success" size="small">online</el-tag>
+            <el-tag v-else type="info" size="small">offline</el-tag>
+            <el-tag v-if="row.connection === 'direct'" type="success" size="small" class="path">direct</el-tag>
+            <el-tag v-if="row.connection === 'relay'" type="warning" size="small" class="path">relayed</el-tag>
+          </span>
+          <span class="item-seen">{{ lastSeen(row) }}</span>
+          <el-button v-if="!row.self" type="danger" link :data-testid="`device-remove-${row.name}`" @click="removing = row">
+            Remove
+          </el-button>
+        </div>
+      </div>
+    </div>
+    <el-table v-else v-loading="loading" :data="devices" row-key="id" data-testid="devices-table" empty-text="No devices yet">
       <el-table-column label="Name" min-width="140">
         <template #default="{ row }">
           <span :data-testid="`device-name-${row.name}`">{{ row.name }}</span>
@@ -104,5 +133,33 @@ onUnmounted(() => window.clearInterval(timer))
 .self,
 .path {
   margin-left: 6px;
+}
+.item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+.item:last-child {
+  border-bottom: none;
+}
+.item-name {
+  font-weight: 500;
+}
+.item-meta,
+.item-seen,
+.empty {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
+}
+.item-meta {
+  margin: 4px 0 6px;
+}
+.item-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.item-foot .el-button {
+  margin-left: auto;
 }
 </style>
