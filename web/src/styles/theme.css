@@ -1,0 +1,96 @@
+:root {
+  --ts-bg: #f4f6fb;
+  --ts-surface: #ffffff;
+  --ts-surface-2: #f7f8fc;
+  --ts-border: #e3e7f0;
+  --ts-text: #1c2333;
+  --ts-text-2: #5b6478;
+  --ts-accent: #3f63f2;
+  --ts-accent-soft: rgba(63, 99, 242, 0.1);
+  --ts-good: #1f9d55;
+  --ts-good-soft: rgba(31, 157, 85, 0.12);
+  --ts-warn: #c77700;
+  --ts-warn-soft: rgba(199, 119, 0, 0.14);
+  --ts-off: #8a93a6;
+  --ts-hero: linear-gradient(135deg, #3f63f2 0%, #6a4cf0 100%);
+  --ts-shadow: 0 1px 2px rgba(20, 30, 60, 0.06), 0 4px 16px rgba(20, 30, 60, 0.06);
+  --el-color-primary: var(--ts-accent);
+}
+
+html.dark {
+  --ts-bg: #0f131b;
+  --ts-surface: #171c26;
+  --ts-surface-2: #1d2330;
+  --ts-border: #283043;
+  --ts-text: #e6e9f0;
+  --ts-text-2: #9aa3b5;
+  --ts-accent: #7c93ff;
+  --ts-accent-soft: rgba(124, 147, 255, 0.14);
+  --ts-good: #3ecf7d;
+  --ts-good-soft: rgba(62, 207, 125, 0.14);
+  --ts-warn: #f0a640;
+  --ts-warn-soft: rgba(240, 166, 64, 0.16);
+  --ts-off: #6c7488;
+  --ts-hero: linear-gradient(135deg, #2c47c9 0%, #5434c9 100%);
+  --ts-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.25);
+  --el-color-primary: var(--ts-accent);
+}
+
+body {
+  margin: 0;
+  background: var(--ts-bg);
+  color: var(--ts-text);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ts-card {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: 14px;
+  box-shadow: var(--ts-shadow);
+  padding: 20px;
+}
+
+.ts-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+.ts-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.ts-pill.good {
+  background: var(--ts-good-soft);
+  color: var(--ts-good);
+}
+.ts-pill.warn {
+  background: var(--ts-warn-soft);
+  color: var(--ts-warn);
+}
+.ts-pill.off {
+  background: var(--ts-surface-2);
+  color: var(--ts-off);
+}
+.ts-pill.accent {
+  background: var(--ts-accent-soft);
+  color: var(--ts-accent);
+}
+.ts-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}

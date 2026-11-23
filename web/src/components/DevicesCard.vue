@@ -1,25 +1,32 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Cellphone, Iphone, Monitor, House, Connection } from '@element-plus/icons-vue'
 import { api, type Device } from '@/api'
+import { useDevices } from '@/devices'
 
-const devices = ref<Device[]>([])
-const loading = ref(true)
+const { devices, loading, error, load } = useDevices()
 const removing = ref<Device | null>(null)
 const busy = ref(false)
-const narrowQuery = window.matchMedia('(max-width: 640px)')
-const narrow = ref(narrowQuery.matches)
-const onWidth = (e: MediaQueryListEvent) => (narrow.value = e.matches)
-let timer: number | undefined
 
-async function load() {
-  try {
-    devices.value = await api.devices()
-  } catch (e) {
-    ElMessage.error(`Unable to load devices: ${(e as Error).message}`)
-  } finally {
-    loading.value = false
-  }
+const sorted = computed(() => devices.value)
+
+function icon(device: Device) {
+  if (device.self) return House
+  const os = device.os.toLowerCase()
+  if (os === 'android') return Cellphone
+  if (os === 'ios') return Iphone
+  if (os) return Monitor
+  return Connection
+}
+
+function lastSeen(device: Device): string {
+  if (device.online) return 'Active now'
+  if (!device.last_seen) return 'Never connected'
+  const minutes = Math.round((Date.now() / 1000 - device.last_seen) / 60)
+  if (minutes < 60) return `Last seen ${minutes} min ago`
+  if (minutes < 60 * 48) return `Last seen ${Math.round(minutes / 60)} h ago`
+  return `Last seen ${new Date(device.last_seen * 1000).toLocaleDateString()}`
 }
 
 async function confirmRemove() {
@@ -36,81 +43,49 @@ async function confirmRemove() {
     busy.value = false
   }
 }
-
-function lastSeen(device: Device): string {
-  if (device.online) return 'now'
-  if (!device.last_seen) return 'never'
-  return new Date(device.last_seen * 1000).toLocaleString()
-}
-
-onMounted(() => {
-  load()
-  timer = window.setInterval(load, 15000)
-  narrowQuery.addEventListener('change', onWidth)
-})
-onUnmounted(() => {
-  window.clearInterval(timer)
-  narrowQuery.removeEventListener('change', onWidth)
-})
 </script>
 
 <template>
-  <el-card data-testid="devices-card">
-    <template #header>Devices</template>
-    <div v-if="narrow" v-loading="loading" class="list" data-testid="devices-list">
-      <p v-if="!loading && devices.length === 0" class="empty">No devices yet</p>
-      <div v-for="row in devices" :key="row.id" class="item">
-        <div class="item-head">
-          <span :data-testid="`device-name-${row.name}`" class="item-name">{{ row.name }}</span>
-          <el-tag v-if="row.self" size="small" class="self" :data-testid="`device-self-${row.name}`">this device</el-tag>
+  <section class="ts-card" data-testid="devices-card">
+    <h2 class="ts-card-title">Devices</h2>
+    <div v-loading="loading" class="list" data-testid="devices-list">
+      <p v-if="error" class="empty">Unable to load devices: {{ error }}</p>
+      <p v-else-if="!loading && sorted.length <= 1" class="empty">
+        No phones or laptops yet. Connect one with the steps above.
+      </p>
+      <div v-for="row in sorted" :key="row.id" class="row" :class="{ self: row.self }">
+        <div class="avatar" :class="{ online: row.online }">
+          <el-icon :size="20"><component :is="icon(row)" /></el-icon>
         </div>
-        <div class="item-meta">{{ row.user }} · {{ row.addresses[0] }}</div>
-        <div class="item-foot">
-          <span :data-testid="`device-status-${row.name}`">
-            <el-tag v-if="row.online" type="success" size="small">online</el-tag>
-            <el-tag v-else type="info" size="small">offline</el-tag>
-            <el-tag v-if="row.connection === 'direct'" type="success" size="small" class="path">direct</el-tag>
-            <el-tag v-if="row.connection === 'relay'" type="warning" size="small" class="path">relayed</el-tag>
-          </span>
-          <span class="item-seen">{{ lastSeen(row) }}</span>
-          <el-button v-if="!row.self" type="danger" link :data-testid="`device-remove-${row.name}`" @click="removing = row">
+        <div class="info">
+          <div class="name-line">
+            <span class="name" :data-testid="`device-name-${row.name}`">{{ row.name }}</span>
+            <span v-if="row.self" class="ts-pill accent" :data-testid="`device-self-${row.name}`">this device</span>
+          </div>
+          <div class="meta">
+            {{ row.user }} · {{ row.addresses[0] }} · {{ lastSeen(row) }}
+          </div>
+        </div>
+        <div class="status" :data-testid="`device-status-${row.name}`">
+          <span v-if="row.online" class="ts-pill good"><span class="ts-dot" />online</span>
+          <span v-else class="ts-pill off"><span class="ts-dot" />offline</span>
+          <span v-if="row.connection === 'direct'" class="ts-pill good" :title="row.endpoint">direct</span>
+          <span v-if="row.connection === 'relay'" class="ts-pill warn">relayed</span>
+        </div>
+        <div class="actions">
+          <el-button
+            v-if="!row.self"
+            type="danger"
+            plain
+            size="small"
+            :data-testid="`device-remove-${row.name}`"
+            @click="removing = row"
+          >
             Remove
           </el-button>
         </div>
       </div>
     </div>
-    <el-table v-else v-loading="loading" :data="devices" row-key="id" data-testid="devices-table" empty-text="No devices yet">
-      <el-table-column label="Name" min-width="140">
-        <template #default="{ row }">
-          <span :data-testid="`device-name-${row.name}`">{{ row.name }}</span>
-          <el-tag v-if="row.self" size="small" class="self" :data-testid="`device-self-${row.name}`">this device</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="user" label="User" min-width="100" />
-      <el-table-column label="Address" min-width="120">
-        <template #default="{ row }">{{ row.addresses[0] }}</template>
-      </el-table-column>
-      <el-table-column label="Status" min-width="160">
-        <template #default="{ row }">
-          <span :data-testid="`device-status-${row.name}`">
-            <el-tag v-if="row.online" type="success" size="small">online</el-tag>
-            <el-tag v-else type="info" size="small">offline</el-tag>
-            <el-tag v-if="row.connection === 'direct'" type="success" size="small" class="path">direct</el-tag>
-            <el-tag v-if="row.connection === 'relay'" type="warning" size="small" class="path">relayed</el-tag>
-          </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="Last seen" min-width="140">
-        <template #default="{ row }">{{ lastSeen(row) }}</template>
-      </el-table-column>
-      <el-table-column width="100" align="right">
-        <template #default="{ row }">
-          <el-button v-if="!row.self" type="danger" link :data-testid="`device-remove-${row.name}`" @click="removing = row">
-            Remove
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
     <el-dialog
       :model-value="removing !== null"
       title="Remove device"
@@ -119,47 +94,95 @@ onUnmounted(() => {
       @close="removing = null"
     >
       <p>
-        Remove <b>{{ removing?.name }}</b>? It will have to sign in again to reconnect.
+        Remove <b>{{ removing?.name }}</b>? It will need to sign in again to reconnect.
       </p>
       <template #footer>
         <el-button data-testid="remove-cancel" @click="removing = null">Cancel</el-button>
         <el-button type="danger" :loading="busy" data-testid="remove-confirm" @click="confirmRemove">Remove</el-button>
       </template>
     </el-dialog>
-  </el-card>
+  </section>
 </template>
 
 <style scoped>
-.self,
-.path {
-  margin-left: 6px;
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 60px;
 }
-.item {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--el-border-color-lighter);
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--ts-border);
+  border-radius: 12px;
+  background: var(--ts-surface-2);
+  flex-wrap: wrap;
 }
-.item:last-child {
-  border-bottom: none;
+.row.self {
+  border-color: var(--ts-accent);
+  background: var(--ts-accent-soft);
 }
-.item-name {
-  font-weight: 500;
+.avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ts-surface);
+  color: var(--ts-off);
+  border: 1px solid var(--ts-border);
 }
-.item-meta,
-.item-seen,
-.empty {
-  color: var(--el-text-color-secondary);
-  font-size: 13px;
+.avatar.online {
+  color: var(--ts-accent);
 }
-.item-meta {
-  margin: 4px 0 6px;
+.info {
+  flex: 1;
+  min-width: 160px;
 }
-.item-foot {
+.name-line {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
-.item-foot .el-button {
-  margin-left: auto;
+.name {
+  font-weight: 600;
+  font-size: 15px;
+}
+.meta {
+  font-size: 13px;
+  color: var(--ts-text-2);
+  margin-top: 2px;
+}
+.status {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.actions {
+  min-width: 76px;
+  display: flex;
+  justify-content: flex-end;
+}
+.empty {
+  color: var(--ts-text-2);
+  font-size: 14px;
+  margin: 4px 0 8px;
+}
+@media (max-width: 640px) {
+  .status {
+    order: 3;
+    margin-left: 54px;
+  }
+  .actions {
+    order: 4;
+    margin-left: auto;
+    min-width: 0;
+  }
 }
 </style>

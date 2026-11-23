@@ -10,4 +10,5 @@ type Device struct {
 	Self       bool     `json:"self"`
 	Connection string   `json:"connection"`
 	Endpoint   string   `json:"endpoint"`
+	Os         string   `json:"os"`
 }

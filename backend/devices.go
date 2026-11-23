@@ -41,8 +41,11 @@ func (d *Devices) List() ([]Device, error) {
 		if device.Name == "" {
 			device.Name = node.Name
 		}
-		if !device.Self {
+		if device.Self {
+			device.Os = "linux"
+		} else {
 			device.Connection, device.Endpoint = connection(peers, node)
+			device.Os = osOf(peers, node)
 		}
 		devices = append(devices, device)
 	}
@@ -119,6 +122,15 @@ func connection(peers []PeerStatus, node HeadscaleNode) (string, string) {
 		return "", ""
 	}
 	return "", ""
+}
+
+func osOf(peers []PeerStatus, node HeadscaleNode) string {
+	for _, peer := range peers {
+		if sharesAddress(peer.TailscaleIPs, node.IpAddresses) {
+			return peer.OS
+		}
+	}
+	return ""
 }
 
 func sharesAddress(left, right []string) bool {

@@ -13,6 +13,7 @@ export type Device = {
   self: boolean
   connection: '' | 'direct' | 'relay'
   endpoint: string
+  os: string
 }
 
 export const loginPath = '/app/auth/login'

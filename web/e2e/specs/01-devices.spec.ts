@@ -24,6 +24,7 @@ test('lists this device as online and not removable', async ({ page }, info) => 
   await expect(page.getByTestId(`device-self-${device}`)).toBeVisible()
   await expect(page.getByTestId(`device-status-${device}`)).toContainText('online')
   await expect(page.getByTestId(`device-remove-${device}`)).toHaveCount(0)
+  await expect(page.getByTestId('summary-state')).toContainText('Online')
   await shoot(page, `devices-${info.project.name}`)
 })
 

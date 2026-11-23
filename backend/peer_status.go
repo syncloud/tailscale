@@ -5,4 +5,5 @@ type PeerStatus struct {
 	CurAddr      string   `json:"CurAddr"`
 	Relay        string   `json:"Relay"`
 	Online       bool     `json:"Online"`
+	OS           string   `json:"OS"`
 }

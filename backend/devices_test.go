@@ -15,7 +15,7 @@ const nodesJson = `[
 ]`
 
 const statusJson = `{"BackendState":"Running","Peer":{
- "a":{"TailscaleIPs":["100.64.0.2"],"CurAddr":"9.9.9.9:41641","Relay":"syncloud","Online":true},
+ "a":{"TailscaleIPs":["100.64.0.2"],"CurAddr":"9.9.9.9:41641","Relay":"syncloud","Online":true,"OS":"android"},
  "b":{"TailscaleIPs":["100.64.0.3"],"CurAddr":"","Relay":"syncloud","Online":true},
  "c":{"TailscaleIPs":["100.64.0.4"],"CurAddr":"","Relay":"syncloud","Online":false}}}`
 
@@ -46,6 +46,8 @@ func TestDevicesListShowsConnectionPath(t *testing.T) {
 	assert.Equal(t, "relay", byName["laptop"].Connection)
 	assert.Equal(t, "", byName["old"].Connection)
 	assert.Equal(t, int64(200), byName["phone"].LastSeen)
+	assert.Equal(t, "android", byName["phone"].Os)
+	assert.Equal(t, "linux", list[0].Os)
 }
 
 func TestDevicesRemove(t *testing.T) {
