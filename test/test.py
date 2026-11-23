@@ -197,6 +197,13 @@ def test_client_resolves_device_name(device, domain):
     retry(check, attempts=20)
 
 
+def test_client_dns_forwards_names_without_a_record(app_domain):
+    result = client('dns', 'query', app_domain, 'A')
+    output = result.stdout + result.stderr
+    resolvers = output.split('Multiple resolvers available:')[-1]
+    assert 'dns-query' in resolvers, output
+
+
 def test_client_pings_device_directly(domain):
     hostname = domain.split('.')[0]
 
