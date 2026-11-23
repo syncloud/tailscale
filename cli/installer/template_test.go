@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"encoding/json"
 	"os"
 	"path"
 	"testing"
@@ -23,6 +24,7 @@ func TestTemplatesRender(t *testing.T) {
 		Hostname:      "device",
 		Url:           "https://tailscale.device.syncloud.it",
 		AuthUrl:       "https://auth.device.syncloud.it",
+		AuthSocket:    "/var/snap/platform/current/authelia.socket",
 		StunHost:      "stun.syncloud.it",
 		StunPort:      StunPort,
 		HeadscalePort: HeadscalePort,
@@ -47,4 +49,12 @@ func TestTemplatesRender(t *testing.T) {
 	nodes := derp["regions"].(map[any]any)[900].(map[string]any)["nodes"].([]any)
 	assert.Equal(t, "stun.syncloud.it", nodes[0].(map[string]any)["hostname"])
 	assert.Equal(t, "tailscale.device.syncloud.it", nodes[1].(map[string]any)["hostname"])
+
+	backend := map[string]any{}
+	content, err = os.ReadFile(path.Join(out, "backend.json"))
+	require.NoError(t, err)
+	require.NoError(t, json.Unmarshal(content, &backend))
+	assert.Equal(t, "/snap/tailscale/current/web", backend["web_dir"])
+	assert.Equal(t, "/var/snap/platform/current/authelia.socket", backend["auth_socket"])
+	assert.Equal(t, "https://auth.device.syncloud.it", backend["auth_url"])
 }

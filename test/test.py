@@ -97,10 +97,23 @@ def test_health(app_domain):
     retry(check)
 
 
-def test_info_page_shows_server(app_domain):
+def test_ui_served_at_root(app_domain):
     response = requests.get('https://{0}/'.format(app_domain), verify=False)
     assert response.status_code == 200, response.text
-    assert 'https://{0}'.format(app_domain) in response.text
+    assert 'id="app"' in response.text
+
+
+def test_ui_api_requires_sign_in(app_domain):
+    response = requests.get('https://{0}/app/api/devices'.format(app_domain), verify=False)
+    assert response.status_code == 401, response.text
+
+
+def test_ui_login_redirects_to_authelia(app_domain, domain):
+    def check():
+        response = requests.get('https://{0}/app/auth/login'.format(app_domain), verify=False, allow_redirects=False)
+        assert response.status_code == 302, response.text
+        assert 'auth.{0}'.format(domain) in response.headers.get('Location', ''), response.headers
+    retry(check, attempts=20)
 
 
 def test_derp_reachable_through_platform(app_domain):

@@ -8,5 +8,11 @@
   "url": "{{ .Url }}",
   "hostname": "{{ .Hostname }}",
   "records": "{{ .DataDir }}/extra-records.json",
-  "snap_dir": "/snap"
+  "snap_dir": "/snap",
+  "web_dir": "{{ .AppDir }}/web",
+  "auth_url": "{{ .AuthUrl }}",
+  "auth_socket": "{{ .AuthSocket }}",
+  "client_id": "{{ .App }}",
+  "secret_file": "{{ .DataDir }}/config/oidc.secret",
+  "session_key_file": "{{ .DataDir }}/config/session.key"
 }

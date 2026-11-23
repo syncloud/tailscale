@@ -1,6 +1,7 @@
 package installer
 
 import (
+	"crypto/rand"
 	"fmt"
 	"os"
 	"path"
@@ -134,6 +135,7 @@ func (i *Installer) UpdateConfigs() error {
 		Hostname:      strings.Split(domain, ".")[0],
 		Url:           url,
 		AuthUrl:       authUrl,
+		AuthSocket:    i.platformClient.GetAuthLocalSocket(),
 		StunHost:      StunHost(domain),
 		StunPort:      StunPort,
 		HeadscalePort: HeadscalePort,
@@ -145,6 +147,9 @@ func (i *Installer) UpdateConfigs() error {
 		return err
 	}
 	if err := i.initRecords(); err != nil {
+		return err
+	}
+	if err := i.initSessionKey(); err != nil {
 		return err
 	}
 
@@ -171,8 +176,20 @@ func (i *Installer) initRecords() error {
 	return os.WriteFile(records, []byte("[]"), 0644)
 }
 
+func (i *Installer) initSessionKey() error {
+	keyFile := path.Join(i.configDir, "session.key")
+	if _, err := os.Stat(keyFile); err == nil {
+		return nil
+	}
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		return err
+	}
+	return os.WriteFile(keyFile, key, 0600)
+}
+
 func (i *Installer) registerOIDC() error {
-	secret, err := i.platformClient.RegisterOIDCClient(App, []string{"/oidc/callback"}, true, "client_secret_basic")
+	secret, err := i.platformClient.RegisterOIDCClient(App, []string{"/oidc/callback", "/app/auth/callback"}, true, "client_secret_basic")
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,8 @@ local name = 'tailscale';
 local headscale = '0.29.7';
 local tailscale = '1.104.7';
 local go = '1.27.3';
+local node = '22-bookworm';
+local playwright = 'mcr.microsoft.com/playwright:v1.59.1-jammy';
 local python = '3.12-slim-bookworm';
 local debian = 'bookworm-slim';
 local platform = '26.10.02';
@@ -11,7 +13,13 @@ local snapd_hold = "mkdir -p /etc/systemd/system/snapd.service.d && printf '[Ser
 
 local platform_image(distro) = 'syncloud/platform-' + distro + ':' + platform;
 
-local build(arch) = [{
+local e2e(project) = {
+  name: 'e2e ' + project,
+  image: playwright,
+  commands: ['./ci/ui.sh ' + project + ' bookworm specs/01-devices.spec.ts'],
+};
+
+local build(arch, test_ui) = [{
   kind: 'pipeline',
   type: 'docker',
   name: arch,
@@ -38,6 +46,11 @@ local build(arch) = [{
     }
     for distro in distros
   ] + [
+    {
+      name: 'web',
+      image: 'node:' + node,
+      commands: ['./web/build.sh'],
+    },
     {
       name: 'cli',
       image: 'golang:' + go,
@@ -68,7 +81,7 @@ local build(arch) = [{
       commands: ['./test/run.sh ' + distro + ' ' + name + ' $DRONE_BUILD_NUMBER ' + tailscale],
     }
     for distro in distros
-  ] + [
+  ] + (if test_ui then [e2e('desktop'), e2e('mobile')] else []) + [
     {
       name: 'publish',
       image: 'syncloud/store-publisher:' + store_publisher,
@@ -121,5 +134,5 @@ local build(arch) = [{
   ],
 }];
 
-build('amd64') +
-build('arm64')
+build('amd64', true) +
+build('arm64', false)

@@ -10,6 +10,7 @@ type Variables struct {
 	Hostname      string
 	Url           string
 	AuthUrl       string
+	AuthSocket    string
 	StunHost      string
 	StunPort      int
 	HeadscalePort int
