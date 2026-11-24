@@ -40,7 +40,7 @@ func TestTemplatesRender(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal(content, &headscale))
 	assert.Equal(t, "https://tailscale.device.syncloud.it", headscale["server_url"])
 	split := headscale["dns"].(map[string]any)["nameservers"].(map[string]any)["split"].(map[string]any)
-	assert.Contains(t, split, "device.syncloud.it")
+	assert.Equal(t, []any{"1.1.1.1", "9.9.9.9", "2606:4700:4700::1111", "2620:fe::fe"}, split["device.syncloud.it"])
 
 	derp := map[string]any{}
 	content, err = os.ReadFile(path.Join(out, "derp.yaml"))
