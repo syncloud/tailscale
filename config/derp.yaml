@@ -1,0 +1,16 @@
+regions:
+  900:
+    regionid: 900
+    regioncode: syncloud
+    regionname: Syncloud
+    nodes:
+      - name: stun
+        regionid: 900
+        hostname: {{ .StunHost }}
+        stunport: {{ .StunPort }}
+        stunonly: true
+      - name: device
+        regionid: 900
+        hostname: {{ .AppDomain }}
+        derpport: 443
+        stunport: -1

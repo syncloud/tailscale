@@ -1,0 +1,48 @@
+name: tailscale
+summary: Tailscale
+description: Direct access to your device from your phone and laptop, even behind CGNAT. Runs a headscale coordination server on the device; connect with the Tailscale apps.
+grade: stable
+
+apps:
+
+  headscale:
+    user: tailscale
+    command: bin/service.headscale.sh
+    daemon: simple
+    restart-condition: always
+    restart-delay: 10s
+    start-timeout: 600s
+    before: [backend]
+
+  tailscaled:
+    command: bin/service.tailscaled.sh
+    daemon: simple
+    restart-condition: always
+    restart-delay: 10s
+    start-timeout: 600s
+    before: [backend]
+
+  backend:
+    command: bin/service.backend.sh
+    daemon: simple
+    restart-condition: always
+    restart-delay: 10s
+    start-timeout: 600s
+
+  cli:
+    command: bin/cli
+
+  storage-change:
+    command: bin/cli storage-change
+
+  access-change:
+    command: bin/cli access-change
+
+  backup-pre-stop:
+    command: bin/cli backup-pre-stop
+
+  restore-pre-start:
+    command: bin/cli restore-pre-start
+
+  restore-post-start:
+    command: bin/cli restore-post-start

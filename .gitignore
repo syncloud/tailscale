@@ -1,0 +1,7 @@
+build/
+artifact/
+version
+package.name
+*.snap
+.drone.yml
+__pycache__/

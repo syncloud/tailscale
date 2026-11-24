@@ -1,0 +1,84 @@
+server_url: {{ .Url }}
+listen_addr: 127.0.0.1:{{ .HeadscalePort }}
+metrics_listen_addr: 127.0.0.1:{{ .MetricsPort }}
+grpc_listen_addr: 127.0.0.1:{{ .GrpcPort }}
+grpc_allow_insecure: false
+trusted_proxies:
+  - 127.0.0.1/32
+
+noise:
+  private_key_path: {{ .DataDir }}/headscale/noise_private.key
+
+prefixes:
+  v4: 100.64.0.0/10
+  v6: fd7a:115c:a1e0::/48
+  allocation: sequential
+
+derp:
+  server:
+    enabled: true
+    region_id: 900
+    region_code: syncloud
+    region_name: Syncloud
+    verify_clients: true
+    stun_listen_addr: 127.0.0.1:{{ .DerpStunPort }}
+    private_key_path: {{ .DataDir }}/headscale/derp_server_private.key
+    automatically_add_embedded_derp_region: false
+  urls: []
+  paths:
+    - {{ .DataDir }}/config/derp.yaml
+  auto_update_enabled: false
+
+disable_check_updates: true
+
+node:
+  expiry: 0
+
+database:
+  type: sqlite
+  sqlite:
+    path: {{ .DataDir }}/headscale/db.sqlite
+    write_ahead_log: true
+
+log:
+  level: info
+  format: text
+
+policy:
+  mode: file
+  path: ""
+
+dns:
+  magic_dns: true
+  base_domain: ts.internal
+  override_local_dns: false
+  nameservers:
+    global: []
+    split:
+      {{ .Domain }}:
+        - 1.1.1.1
+        - 9.9.9.9
+        - 2606:4700:4700::1111
+        - 2620:fe::fe
+  search_domains: []
+  extra_records_path: {{ .DataDir }}/extra-records.json
+
+unix_socket: {{ .DataDir }}/headscale/headscale.sock
+unix_socket_permission: "0770"
+
+oidc:
+  only_start_if_oidc_is_available: false
+  issuer: {{ .AuthUrl }}
+  client_id: {{ .App }}
+  client_secret_path: {{ .DataDir }}/config/oidc.secret
+  scope: ["openid", "profile", "email", "groups"]
+  email_verified_required: false
+  pkce:
+    enabled: true
+    method: S256
+
+logtail:
+  enabled: false
+
+taildrop:
+  enabled: true
